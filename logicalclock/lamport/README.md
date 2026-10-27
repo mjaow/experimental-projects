@@ -50,6 +50,6 @@ L=5 checkout: order confirmed
 
 A process-ID tie-break chooses an order for independent events; it does not establish a causal relationship. Likewise, selecting the greatest timestamp as a stored-value winner can discard concurrent work. Logical "last" does not necessarily mean physically latest.
 
-Try `go run ./examples/notes` to see that lost-update example. Then read the sibling [vector-clock guide](../vector/README.md) to see how richer timestamps identify concurrency.
+Read the sibling [vector-clock guide](../vector/README.md) and run `go run ./examples/vector` to see how richer timestamps identify concurrent revisions and let an application retain both for merging.
 
 Tests cover local increments, receipts from senders behind/equal/ahead, later local events, transitive causal chains, and independent events with equal or unequal timestamps. The clock needs serialized access and assumes counters do not overflow or reset during the modeled lifetime.

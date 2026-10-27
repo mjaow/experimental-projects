@@ -11,7 +11,6 @@ logicalclock/
   vector/                 Vector clock, focused tests, and its own guide
   examples/lamport/       Order checkout/payment logs using only Lamport clocks
   examples/vector/        Detect revision conflicts using only vector clocks
-  examples/notes/         Compare both clocks on the same replicated-note edits
   causality_test.go       Check both algorithms against an explicit message history
 ```
 
@@ -25,11 +24,10 @@ From the repository root:
 cd logicalclock
 go run ./examples/lamport
 go run ./examples/vector
-go run ./examples/notes
 go test ./...
 ```
 
-Read the [Lamport guide](lamport/README.md), then the [vector guide](vector/README.md), then the [shared-note comparison](examples/notes/README.md). Each example uses a fixed sequence of in-memory message deliveries so the clock rules stay visible without networking or scheduling noise.
+Read the [Lamport guide](lamport/README.md), then the [vector guide](vector/README.md). Each example uses a fixed sequence of in-memory message deliveries so the clock rules stay visible without networking or scheduling noise.
 
 ## The shared problem: causality without synchronized time
 
@@ -53,6 +51,8 @@ For example, A performs two events and B performs one, with no communication. Th
 
 Vector clocks retain more information at higher cost. They are a different logical-clock algorithm, not a component of Lamport clocks or a universal replacement.
 
+For concurrent writes, choosing the largest `(Lamport timestamp, process ID)` gives replicas with the same writes a deterministic winner, but can discard an independent edit. Vector clocks distinguish a causally superseding version from a concurrent version, allowing the application to retain both for merging. Use the ordering rule when a single deterministic winner is sufficient; use causal metadata when concurrent versions need different handling. An application does not generally need both clocks.
+
 ## Test each layer
 
 From this directory:
@@ -67,7 +67,7 @@ go vet ./...
 
 Package tests check each algorithm independently: local events, receipt, causal propagation, comparisons, and vector snapshot isolation. `causality_test.go` builds an independent ancestor graph from process order and message edges, then checks every pair of events against both clocks. Its history includes independent edits, forks, joins, delayed messages, and duplicates.
 
-The focused examples have executable expected-output tests. The shared-note tests check application behavior: causal edits win, ties are deterministic, concurrent edits can have unequal scalar timestamps, and delivery order does not change the winner.
+Both focused examples have executable expected-output tests. The shared causality test also verifies that concurrent events can have unequal Lamport timestamps while their vectors remain incomparable.
 
 ## Beyond clocks
 
